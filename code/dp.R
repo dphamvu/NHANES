@@ -52,7 +52,6 @@ dermatology_raw<- read_xpt(file = "data/raw/P_DEQ.XPT"); names(dermatology_raw) 
 
 weight_hist_raw<- read_xpt(file = "data/raw/P_WHQ.XPT"); names(weight_hist_raw) %<>% tolower #weight history
 
-original_db <- read_csv(file = "data/clean/db(1).csv")
 ### handle demo dataset --- the one in the quotations is the original variables 
 demo <- demo_raw %>% 
   rename(subject="seqn",
@@ -102,7 +101,7 @@ diabetes <- diabetes_raw %>%
                                  diq160 = c(7,9))) %>%
   mutate(dr_diabetes=ifelse(is.na(diq010), NA, as.numeric(diq010==1)),## doctor told participant have diabetes
   dr_prediabetes=ifelse(is.na(diq160), NA, as.numeric(diq160==1))) %>% #told by doctor to have prediabetes
-  select(subject, dr_diabetes)
+  select(subject, dr_diabetes, dr_prediabetes)
 
 ### blood pressure and cholesterol
 bp <- bp_raw %>%
@@ -148,7 +147,7 @@ smoking <- smoking_raw %>%
                                  now_smoke = c(7,9),
                                  smq020 = c(7,9))) %>%
   mutate(smoke100=ifelse(is.na(smq020), NA, as.numeric(smq020==1))) %>% ## have smoked at least 100 cigarette in life (this variable is the most promising in there)
-  select(subject, age_first_smoke, now_smoke)
+  select(subject, smoke100, age_first_smoke, now_smoke)
 
 ### did not use physical activity because too many variables to work with right now
 
@@ -162,7 +161,7 @@ sleep <- sleep_raw %>%
   replace_with_na(replace = list(slq050 = c(7,9),
                                  sleepy_during_day = c(7,9))) %>%
   mutate(dr_sleep=ifelse(is.na(slq050), NA, as.numeric(slq050==1))) %>% ## ever told doctor had trouble sleeping
-  select(subject, sleep_weekday, sleep_weekend, dr_sleep)
+  select(subject, sleep_weekday, sleep_weekend, dr_sleep, sleepy_during_day)
 
 ### medical condition
 medical <- medical_raw %>%
@@ -244,7 +243,7 @@ physical_activity <- physical_raw %>%
          walk_bike=ifelse(is.na(paq635), NA, as.numeric(paq635==1)), #walk or bicycle
          vigor_rec=ifelse(is.na(paq650), NA, as.numeric(paq650==1)), #vigorous recreational activity
   moderate_rec=ifelse(is.na(paq665), NA, as.numeric(paq665==1))) %>% #moderate rec activities
-  select(subject, min_sedentary,walk_bike,
+  select(subject, min_sedentary,vigor_work,moderate_work,walk_bike,
          vigor_rec, moderate_rec)
 
 weight_history <- weight_hist_raw%>%
@@ -257,62 +256,6 @@ weight_history <- weight_hist_raw%>%
                                  want_lose_weight = c(7,9))) %>%
   select(subject, weight_self_percept, want_lose_weight)
 
-medical2 <- medical_raw %>%
-  rename(subject="seqn") %>%
-  replace_with_na(replace = list(mcq010 = c(7.9),
-                                 mcq160a = c(7,9),
-                                 mcq160c = c(7,9),
-                                 mcq160e = c(7,9),
-                                 mcq160f = c(7,9),
-                                 mcq160m = c(7,9),
-                                 mcq220 = c(7,9),
-                                 mcq366a = c(7,9),
-                                 mcq366b = c(7,9),
-                                 mcq366c = c(7,9),
-                                 mcq366d = c(7,9))) %>%
-  mutate(told_asthma=ifelse(is.na(mcq010), NA, as.numeric(mcq010==1)), ## ever told you had asthma
-         told_arthritis=ifelse(is.na(mcq160a), NA, as.numeric(mcq160a==1)), ## ever told to have arthritis
-         told_coronary=ifelse(is.na(mcq160c), NA, as.numeric(mcq160c==1)), ## ever told to have coronary heart disease
-         told_attack=ifelse(is.na(mcq160e), NA, as.numeric(mcq160e==1)), ## ever told to have heart attack
-         told_stroke=ifelse(is.na(mcq160f), NA, as.numeric(mcq160f==1)), ## ever told to have a stroke
-         told_thyroid=ifelse(is.na(mcq160m), NA, as.numeric(mcq160m==1)), ## ever told to have thyroid problem
-         told_cancer=ifelse(is.na(mcq220), NA, as.numeric(mcq220==1)), ## ever told to have cancer or malignancy 
-         told_weight=ifelse(is.na(mcq366a), NA, as.numeric(mcq366a==1)), ## ever told by health professional to lose weight
-         told_exe=ifelse(is.na(mcq366b), NA, as.numeric(mcq366b==1)), ## ever told by health professional to exercise
-         told_salt=ifelse(is.na(mcq366c), NA, as.numeric(mcq366c==1)), ## ever told by health professional to reduce salt in diet
-         told_fat=ifelse(is.na(mcq366d), NA, as.numeric(mcq366d==1))) %>% ## ever told by health professional to lose fat/calories
-  select(subject, told_asthma, told_arthritis, told_coronary,
-         told_attack, told_stroke, told_thyroid, 
-         told_cancer, told_weight, told_exe, told_salt, told_fat) 
-
-medical3 <- medical_raw %>%
-  rename(subject="seqn") %>%
-  replace_with_na(replace = list(mcq010 = c(7.9),
-                                 mcq160a = c(7,9),
-                                 mcq160c = c(7,9),
-                                 mcq160e = c(7,9),
-                                 mcq160f = c(7,9),
-                                 mcq160m = c(7,9),
-                                 mcq220 = c(7,9),
-                                 mcq366a = c(7,9),
-                                 mcq366b = c(7,9),
-                                 mcq366c = c(7,9),
-                                 mcq366d = c(7,9))) %>%
-  mutate(told_asthma=ifelse(is.na(mcq010), NA, as.numeric(mcq010==1)), ## ever told you had asthma
-         told_arthritis=ifelse(is.na(mcq160a), NA, as.numeric(mcq160a==1)), ## ever told to have arthritis
-         told_coronary=ifelse(is.na(mcq160c), NA, as.numeric(mcq160c==1)), ## ever told to have coronary heart disease
-         told_attack=ifelse(is.na(mcq160e), NA, as.numeric(mcq160e==1)), ## ever told to have heart attack
-         told_stroke=ifelse(is.na(mcq160f), NA, as.numeric(mcq160f==1)), ## ever told to have a stroke
-         told_thyroid=ifelse(is.na(mcq160m), NA, as.numeric(mcq160m==1)), ## ever told to have thyroid problem
-         told_cancer=ifelse(is.na(mcq220), NA, as.numeric(mcq220==1)), ## ever told to have cancer or malignancy 
-         told_weight=ifelse(is.na(mcq366a), NA, as.numeric(mcq366a==1)), ## ever told by health professional to lose weight
-         told_exe=ifelse(is.na(mcq366b), NA, as.numeric(mcq366b==1)), ## ever told by health professional to exercise
-         told_salt=ifelse(is.na(mcq366c), NA, as.numeric(mcq366c==1)), ## ever told by health professional to reduce salt in diet
-         told_fat=ifelse(is.na(mcq366d), NA, as.numeric(mcq366d==1))) %>% ## ever told by health professional to lose fat/calories
-  select(subject, told_asthma, told_arthritis, told_coronary,
-         told_attack, told_stroke, told_thyroid, 
-         told_cancer) 
-
 ### merge everything
 final_clean <- Reduce(function(x,y) left_join(x, y, by = "subject"), 
          list(mental, demo, diabetes, bp, cardio, body,
@@ -321,18 +264,10 @@ final_clean <- Reduce(function(x,y) left_join(x, y, by = "subject"),
 
 write_csv(clean_data, file="final_clean.csv", na="")
 
-final_clean_6 <- Reduce(function(x,y) left_join(x, y, by = "subject"), 
-             list(mental, demo, 
-                   smoking, sleep, medical2, occupation, 
-                  physical_activity, weight_history)) %>%
+db <- Reduce(function(x,y) left_join(x, y, by = "subject"), 
+             list(mental, demo, diabetes, bp, cardio, body,
+                  insurance, smoking, sleep, medical)) %>%
   drop_na() ## remove all survey participants with missing data. 
 
-write_csv(final_clean_6, file="final_clean_6.csv", na="")
+write_csv(db, file="db.csv", na="")
 
-final_clean_5 <- Reduce(function(x,y) left_join(x, y, by = "subject"), 
-                        list(mental, demo, 
-                             smoking, sleep, medical2, occupation, 
-                             physical_activity, weight_history, diabetes, bp)) %>%
-  drop_na() ## remove all survey participants with missing data. 
-
-write_csv(final_clean_5, file="final_clean_5.csv", na="")
