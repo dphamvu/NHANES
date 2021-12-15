@@ -22,9 +22,9 @@ sleep_raw <- read_xpt(file = "data/raw/P_SLQ.XPT"); names(sleep_raw) %<>% tolowe
 
 medical_raw <- read_xpt(file = "data/raw/P_MCQ.XPT"); names(medical_raw) %<>% tolower #medical conditions
 
-diabetes_raw <- read_xpt(path_diabetes); names(diabetes_raw) %<>% tolower #diabetes
+diabetes_raw <- read_xpt(file = "data/raw/P_DIQ.XPT"); names(diabetes_raw) %<>% tolower #diabetes
 
-bp_raw <- read_xpt(path_bp); names(bp_raw) %<>% tolower #blood pressure and cholesterol
+bp_raw <- read_xpt(file = "data/raw/P_BPQ.XPT"); names(bp_raw) %<>% tolower #blood pressure and cholesterol
 
 occupation_raw<- read_xpt(file = "data/raw/P_OCQ.XPT"); names(occupation_raw) %<>% tolower #occupation
 
@@ -95,7 +95,7 @@ sleep <- sleep_raw %>%
          sleep_weekday="sld012",
          sleep_weekend="sld013") %>%
   replace_with_na(replace = list(slq050 = c(7,9))) %>%
-  mutate(dr_sleep=ifelse(is.na(slq050), NA, as.numeric(slq050==1))) %>% ## told by doctor to have trouble sleeping
+  mutate(dr_sleep=ifelse(is.na(slq050), NA, as.numeric(slq050==1))) %>% ## told doctor about trouble sleeping
   select(subject, sleep_weekday, sleep_weekend, dr_sleep)
 
 ### medical condition
@@ -105,28 +105,39 @@ medical <- medical_raw %>%
   replace_with_na(replace = list(mcq010 = c(7.9),
                                  mcq160a = c(7,9),
                                  mcq160c = c(7,9),
-                                 mcq160e = c(7,9),
+                                 mcq160l = c(7,9),
                                  mcq160f = c(7,9),
                                  mcq160m = c(7,9),
+                                 mcq160p = c(7,9),
                                  mcq220 = c(7,9),
                                  mcq366a = c(7,9),
                                  mcq366b = c(7,9),
                                  mcq366c = c(7,9),
+                                 mcq371a = c(7,9),
+                                 mcq371b = c(7,9),
+                                 mcq371c = c(7,9),
+                                 mcq371d = c(7,9),
                                  mcq366d = c(7,9))) %>%
   mutate(told_asthma=ifelse(is.na(mcq010), NA, as.numeric(mcq010==1)), ## ever told you had asthma
          told_arthritis=ifelse(is.na(mcq160a), NA, as.numeric(mcq160a==1)), ## ever told to have arthritis
          told_coronary=ifelse(is.na(mcq160c), NA, as.numeric(mcq160c==1)), ## ever told to have coronary heart disease
-         told_attack=ifelse(is.na(mcq160e), NA, as.numeric(mcq160e==1)), ## ever told to have heart attack
+         told_liver=ifelse(is.na(mcq160l), NA, as.numeric(mcq160l==1)), ## ever told to have liver disease
+         told_copd=ifelse(is.na(mcq160p), NA, as.numeric(mcq160p==1)), #ever told by doctor to have copd
          told_stroke=ifelse(is.na(mcq160f), NA, as.numeric(mcq160f==1)), ## ever told to have a stroke
          told_thyroid=ifelse(is.na(mcq160m), NA, as.numeric(mcq160m==1)), ## ever told to have thyroid problem
          told_cancer=ifelse(is.na(mcq220), NA, as.numeric(mcq220==1)), ## ever told to have cancer or malignancy 
          told_weight=ifelse(is.na(mcq366a), NA, as.numeric(mcq366a==1)), ## ever told by health professional to lose weight
          told_exe=ifelse(is.na(mcq366b), NA, as.numeric(mcq366b==1)), ## ever told by health professional to exercise
          told_salt=ifelse(is.na(mcq366c), NA, as.numeric(mcq366c==1)), ## ever told by health professional to reduce salt in diet
+         now_lose_weight=ifelse(is.na(mcq371a), NA, as.numeric(mcq371a==1)), #now try to control weight
+         now_increase_ex=ifelse(is.na(mcq371b), NA, as.numeric(mcq371b==1)), #now try to increase exercise
+         now_reduce_salt=ifelse(is.na(mcq371c), NA, as.numeric(mcq371c==1)), #now try to reduce salt
+         now_reduce_fat=ifelse(is.na(mcq371d), NA, as.numeric(mcq371d==1)), #now try to reduce fat
          told_fat=ifelse(is.na(mcq366d), NA, as.numeric(mcq366d==1))) %>% ## ever told by health professional to lose fat/calories
   select(subject, told_asthma, told_arthritis, told_coronary,
-         told_attack, told_stroke, told_thyroid, 
-         told_cancer, told_weight, told_exe, told_salt, told_fat) 
+         told_liver, told_copd, told_stroke, told_thyroid, 
+         told_cancer, told_weight, told_exe, told_salt, told_fat,
+         now_lose_weight, now_increase_ex, now_reduce_salt, now_reduce_fat) 
 
 ## diabetes
 diabetes <- diabetes_raw %>%
@@ -193,5 +204,6 @@ final_clean_data <- Reduce(function(x,y) left_join(x, y, by = "subject"),
   drop_na() ## remove all survey participants with missing data. 
 
 write_csv(final_clean_data, file="final_clean_data.csv", na="")
+
 
 
