@@ -103,8 +103,7 @@ gbm_fit = gbm(mental_score ~ . - subject,
 
 #visualize CV error
 opt_num_trees = gbm.perf(gbm_fit)
-
-#Based on this CV error plot, there are not enough trees to fit the model
+opt_num_trees   #45
 
 ##Tuned the interaction depth
 
@@ -112,7 +111,7 @@ set.seed(1)
 gbm_fit_1 = gbm(mental_score ~ .,
                 
                 distribution = "gaussian",
-                n.trees = 25,
+                n.trees = 45,
                 interaction.depth = 1,
                 shrinkage = 0.1,
                 cv.folds = 5,
@@ -122,7 +121,7 @@ set.seed(1)
 gbm_fit_2 = gbm(mental_score ~ .,
                 
                 distribution = "gaussian",
-                n.trees = 25,
+                n.trees = 45,
                 interaction.depth = 2,
                 shrinkage = 0.1,
                 cv.folds = 5,
@@ -133,7 +132,7 @@ set.seed(1)
 gbm_fit_3 = gbm(mental_score ~ .,
                 
                 distribution = "gaussian",
-                n.trees = 25,
+                n.trees = 45,
                 interaction.depth = 3,
                 shrinkage = 0.1,
                 cv.folds = 5,
@@ -144,15 +143,33 @@ set.seed(1)
 gbm_fit_4 = gbm(mental_score ~ .,
                 
                 distribution = "gaussian",
-                n.trees = 25,
+                n.trees = 45,
                 interaction.depth = 4,
                 shrinkage = 0.1,
                 cv.folds = 5,
                 data = nhanes_train)
 
+set.seed(1)
+gbm_fit_5 = gbm(mental_score ~ .,
+                
+                distribution = "gaussian",
+                n.trees = 45,
+                interaction.depth = 5,
+                shrinkage = 0.1,
+                cv.folds = 5,
+                data = nhanes_train)
+
+gbm_fit_6 = gbm(mental_score ~ .,
+                
+                distribution = "gaussian",
+                n.trees = 45,
+                interaction.depth = 5,
+                shrinkage = 0.1,
+                cv.folds = 5,
+                data = nhanes_train)
 #extract cv errors
 
-ntrees = 25
+ntrees = 45
 cv_errors = bind_rows(
   tibble(ntree = 1:ntrees, cv_err = gbm_fit_1$cv.error, depth = 1),
   
@@ -161,9 +178,39 @@ cv_errors = bind_rows(
   tibble(ntree = 1:ntrees, cv_err = gbm_fit_3$cv.error, depth = 3),
   
   tibble(ntree = 1:ntrees, cv_err = gbm_fit_4$cv.error, depth = 4)
+
 )
 
 #plot cv errors
 cv_errors %>%
   ggplot(aes(x = ntree, y = cv_err, colour = factor(depth))) +
   geom_line() + theme_bw()
+
+#optimal model and optimal number of trees
+
+gbm_fit_optimal = gbm_fit_2
+optimal_num_trees = gbm.perf(gbm_fit_2, plot.it = FALSE)
+optimal_num_trees   #42
+
+#To get the variable importance measures
+
+summary(gbm_fit_optimal, n.trees = optimal_num_trees, plotit = FALSE)  #dr_sleep, ratio_income
+
+#create partial dependence plots 
+
+partial_dependence_plot_1 = plot(gbm_fit_optimal, 
+                                 i.var = "dr_sleep", 
+                                 n.trees = optimal_num_trees)
+
+partial_dependence_plot_2 = plot(gbm_fit_optimal, 
+                                 i.var = "ratio_income", 
+                                 n.trees = optimal_num_trees)
+
+partial_dependence_plot_3 = plot(gbm_fit_optimal, 
+                                 i.var = "age", 
+                                 n.trees = optimal_num_trees)
+
+partial_dependence_plot_4 = plot(gbm_fit_optimal, 
+                                 i.var = "sleep_weekend", 
+                                 n.trees = optimal_num_trees)
+

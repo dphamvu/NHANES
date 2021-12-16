@@ -5,7 +5,7 @@ source("code/functions/plot_glmnet.R")            # for lasso/ridge trace plots
 # read in the training data
 
 nhanes_train = read_csv("data/clean/nhanes_train.csv", 
-                        col_types = "iififfdffifddffffffffffffffffffffiifffffff")
+                    col_types = "iififfdffifddffffffffffffffffffffiifffffff")
 
 #run OLS
 
