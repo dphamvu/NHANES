@@ -5,20 +5,13 @@ source("code/functions/plot_glmnet.R")            # for lasso/ridge trace plots
 # read in the training data
 
 nhanes_train = read_csv("data/clean/nhanes_train.csv", 
-                    col_types = "iififfdffifddffffffffffffffffffffiifffffff")
+                    col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
 
 #run OLS
-
-ols  = lm (mental_score ~. - subject, data = nhanes_train)
+set.seed(1)
+ols  = lm (log(mental_score) ~. - subject, data = nhanes_train)
 summary(ols)
 
-## female, age, sleep_weekday, liver, ratio_income, vigor_rec, dr_sleep1
-
-lm_female = lm(mental_score ~ female, data = nhanes_train)
-summary(lm_female)
-
-lm_dr_sleep = lm(mental_score ~ dr_sleep, data = nhanes_train)
-summary(lm_dr_sleep)
 
 # run ridge regression
 set.seed(1)
@@ -79,6 +72,7 @@ beta_hat_std %>%
 
 ###ELASTIC NET REGRESSION
 
+set.seed(1)
 elnet_fit = cva.glmnet(mental_score ~ . -subject, 
                        
                        nfolds = 10, 

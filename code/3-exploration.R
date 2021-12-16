@@ -1,13 +1,11 @@
 # load libraries
 library(kableExtra)                     # for printing tables
 library(cowplot)                        # for side by side plots
-library(lubridate)                      # for dealing with dates
-library(maps)                           # for creating maps
 library(tidyverse)
 
 # read in the cleaned data
 nhanes_train = read_csv("data/clean/nhanes_train.csv", 
-                    col_types = "iififfdffifddffffffffffffffffffffiifffffff")
+                    col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
 
 # calculate mean mental health score  (4.9)
 mean_mh_score = nhanes_train %>%
@@ -20,7 +18,7 @@ median_mh_score = nhanes_train %>%
   pull()
 
 # create histogram of mental health score
-p = nhanes_train %>%
+histogram = nhanes_train %>%
   ggplot(aes(x = mental_score)) + 
   geom_histogram() +
   geom_vline(xintercept = mean_mh_score,
@@ -31,7 +29,7 @@ p = nhanes_train %>%
 
 # save the histogram
 ggsave(filename = "results/mental-health-score-histogram.png", 
-       plot = p, 
+       plot = histogram, 
        device = "png", 
        width = 5, 
        height = 3)

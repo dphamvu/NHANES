@@ -6,7 +6,7 @@ library(gbm)
 
 #read in the training data
 nhanes_train = read_csv("data/clean/nhanes_train.csv", 
-                        col_types = "iififfdffifddffffffffffffffffffffiifffffff")
+                      col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
 
 #Fitting and plotting a regression tree
 
@@ -40,11 +40,11 @@ rpart.plot(optimal_tree)
 
 ##Random forest
 
-rf_fit = randomForest(mental_score ~ ., mtry = 41, data = nhanes_train)
+rf_fit = randomForest(mental_score ~ . - subject, mtry = 42, data = nhanes_train)
 plot(rf_fit)
 
 #tuning random forest
-mvalues = seq(1,41, by = 2)
+mvalues = seq(1,42, by = 2)
 oob_errors = numeric(length(mvalues))
 ntree = 500
 for(idx in 1:length(mvalues)){
@@ -68,7 +68,7 @@ ggsave(filename = "results/obb_error_vs_m_plot.png",
        width = 6, 
        height = 4)
 
-#m = 5 is the best value (the minimum of the curve in the OOB error plot vs m)
+#m = 7 is the best value (the minimum of the curve in the OOB error plot vs m)
 
 # extract m corresponding to min value of OOB error
 best_m = m_and_oob_errors %>% arrange(oob_errors) %>% head(1) %>% pull(m)
@@ -103,25 +103,25 @@ gbm_fit = gbm(mental_score ~ . - subject,
 
 #visualize CV error
 opt_num_trees = gbm.perf(gbm_fit)
-opt_num_trees   #45
+opt_num_trees   #57
 
 ##Tuned the interaction depth
 
 set.seed(1)
-gbm_fit_1 = gbm(mental_score ~ .,
+gbm_fit_1 = gbm(mental_score ~ . -subject,
                 
                 distribution = "gaussian",
-                n.trees = 45,
+                n.trees = 57,
                 interaction.depth = 1,
                 shrinkage = 0.1,
                 cv.folds = 5,
                 data = nhanes_train)
 
 set.seed(1)
-gbm_fit_2 = gbm(mental_score ~ .,
+gbm_fit_2 = gbm(mental_score ~ . -subject,
                 
                 distribution = "gaussian",
-                n.trees = 45,
+                n.trees = 57,
                 interaction.depth = 2,
                 shrinkage = 0.1,
                 cv.folds = 5,
@@ -129,10 +129,10 @@ gbm_fit_2 = gbm(mental_score ~ .,
 
 
 set.seed(1)
-gbm_fit_3 = gbm(mental_score ~ .,
+gbm_fit_3 = gbm(mental_score ~ . -subject,
                 
                 distribution = "gaussian",
-                n.trees = 45,
+                n.trees = 57,
                 interaction.depth = 3,
                 shrinkage = 0.1,
                 cv.folds = 5,
@@ -140,36 +140,28 @@ gbm_fit_3 = gbm(mental_score ~ .,
 
 
 set.seed(1)
-gbm_fit_4 = gbm(mental_score ~ .,
+gbm_fit_4 = gbm(mental_score ~ . -subject,
                 
                 distribution = "gaussian",
-                n.trees = 45,
+                n.trees = 57,
                 interaction.depth = 4,
                 shrinkage = 0.1,
                 cv.folds = 5,
                 data = nhanes_train)
 
 set.seed(1)
-gbm_fit_5 = gbm(mental_score ~ .,
+gbm_fit_5 = gbm(mental_score ~ . -subject,
                 
                 distribution = "gaussian",
-                n.trees = 45,
+                n.trees = 57,
                 interaction.depth = 5,
                 shrinkage = 0.1,
                 cv.folds = 5,
                 data = nhanes_train)
 
-gbm_fit_6 = gbm(mental_score ~ .,
-                
-                distribution = "gaussian",
-                n.trees = 45,
-                interaction.depth = 5,
-                shrinkage = 0.1,
-                cv.folds = 5,
-                data = nhanes_train)
 #extract cv errors
 
-ntrees = 45
+ntrees = 57
 cv_errors = bind_rows(
   tibble(ntree = 1:ntrees, cv_err = gbm_fit_1$cv.error, depth = 1),
   
@@ -177,7 +169,9 @@ cv_errors = bind_rows(
   
   tibble(ntree = 1:ntrees, cv_err = gbm_fit_3$cv.error, depth = 3),
   
-  tibble(ntree = 1:ntrees, cv_err = gbm_fit_4$cv.error, depth = 4)
+  tibble(ntree = 1:ntrees, cv_err = gbm_fit_4$cv.error, depth = 4),
+  
+  tibble(ntree = 1:ntrees, cv_err = gbm_fit_5$cv.error, depth = 5)
 
 )
 
@@ -188,29 +182,32 @@ cv_errors %>%
 
 #optimal model and optimal number of trees
 
-gbm_fit_optimal = gbm_fit_2
-optimal_num_trees = gbm.perf(gbm_fit_2, plot.it = FALSE)
-optimal_num_trees   #42
+#Using min(gbm_fit_4$cv.error) and looking at the graph
+
+gbm_fit_optimal = gbm_fit_4
+optimal_num_trees = gbm.perf(gbm_fit_4, plot.it = FALSE)
+optimal_num_trees   #34
 
 #To get the variable importance measures
 
-summary(gbm_fit_optimal, n.trees = optimal_num_trees, plotit = FALSE)  #dr_sleep, ratio_income
-
+summary(gbm_fit_optimal, n.trees = optimal_num_trees, plotit = FALSE)  
 #create partial dependence plots 
 
 partial_dependence_plot_1 = plot(gbm_fit_optimal, 
-                                 i.var = "dr_sleep", 
+                                 i.var = "sleepy", 
                                  n.trees = optimal_num_trees)
 
 partial_dependence_plot_2 = plot(gbm_fit_optimal, 
-                                 i.var = "ratio_income", 
+                                 i.var = "dr_sleep", 
                                  n.trees = optimal_num_trees)
+
 
 partial_dependence_plot_3 = plot(gbm_fit_optimal, 
                                  i.var = "age", 
                                  n.trees = optimal_num_trees)
 
+
 partial_dependence_plot_4 = plot(gbm_fit_optimal, 
-                                 i.var = "sleep_weekend", 
+                                 i.var = "age_first_smoke", 
                                  n.trees = optimal_num_trees)
 

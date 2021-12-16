@@ -35,25 +35,22 @@ weight_hist_raw<- read_xpt(file = "data/raw/P_WHQ.XPT"); names(weight_hist_raw) 
 demo <- demo_raw %>% 
   rename(subject="seqn",
          age="ridageyr", 
-         ratio_income="indfmpir",
-         race = "ridreth3",
-         edu = dmdeduc2,
-         marriage_status = "dmdmartz") %>%
+         ratio_income="indfmpir") %>%
   
-  replace_with_na(replace = list(marriage_status = c(77,99),  #77 and 99 mean Refused and DK
+  replace_with_na(replace = list(dmdmartz = c(77,99),  #77 and 99 mean Refused and DK
                                  dmdborn4 = c(77,99),
-                                edu = c(7,9))) %>% #7 and 9 mean Refused and DK
+                                 dmdeduc2 = c(7,9))) %>% #7 and 9 mean Refused and DK
   ## to facilitate lasso and random forest analysis later, I'm going to create some new variables
   mutate(female=ifelse(is.na(riagendr), NA, riagendr-1), ## female=1, male=0
-         #nonhisp_white=ifelse(is.na(ridreth3), NA, as.numeric(ridreth3==3)), ## non-hispanic white=1, all other=0
-         #never_married=ifelse(is.na(dmdmartz), NA, as.numeric(dmdmartz==3)), ## never married = 1, all others = 0
-         born_us=ifelse(is.na(dmdborn4), NA, as.numeric(dmdborn4==1))) %>%## born in the US = 1, others = 0
-         #edu_college=ifelse(is.na(dmdeduc2), NA, as.numeric(dmdeduc2 %in% c(4, 5)))) %>% ## education some college or above = 1, others = 0
+         nonhisp_white=ifelse(is.na(ridreth3), NA, as.numeric(ridreth3==3)), ## non-hispanic white=1, all other=0
+         never_married=ifelse(is.na(dmdmartz), NA, as.numeric(dmdmartz==3)), ## never married = 1, all others = 0
+         born_us=ifelse(is.na(dmdborn4), NA, as.numeric(dmdborn4==1)),## born in the US = 1, others = 0
+         edu_college=ifelse(is.na(dmdeduc2), NA, as.numeric(dmdeduc2 %in% c(4, 5)))) %>% ## education some college or above = 1, others = 0
   filter(age>=20) %>% ## take only 20+ year-old adults because only they have education recorded 
   
-  select(subject, female, age, race, 
-         marriage_status, ratio_income, 
-         born_us, edu) 
+  select(subject, female, age, nonhisp_white, 
+         never_married, ratio_income, 
+         born_us, edu_college) 
 
 
   
@@ -96,12 +93,10 @@ smoking <- smoking_raw %>%
 sleep <- sleep_raw %>%
   rename(subject="seqn", 
          sleep_weekday="sld012",
-         sleep_weekend="sld013",
-         sleepy = "slq120") %>%  #overly sleepy during day
-  replace_with_na(replace = list(slq050 = c(7,9),
-                                 sleepy = c(7,9))) %>%
+         sleep_weekend="sld013") %>%
+  replace_with_na(replace = list(slq050 = c(7,9))) %>%
   mutate(dr_sleep=ifelse(is.na(slq050), NA, as.numeric(slq050==1))) %>% ## told doctor about trouble sleeping
-  select(subject, sleep_weekday, sleep_weekend, dr_sleep, sleepy)
+  select(subject, sleep_weekday, sleep_weekend, dr_sleep)
 
 ### medical condition
 
@@ -203,14 +198,12 @@ weight_history <- weight_hist_raw%>%
 
 
 ### merge everything
-final_clean_data_for_analysis <- Reduce(function(x,y) left_join(x, y, 
-                                  by = "subject"), 
+final_clean_data <- Reduce(function(x,y) left_join(x, y, by = "subject"), 
          list(mental, demo, smoking, sleep, medical, diabetes, bp, occupation, 
               physical_activity, weight_history)) %>%
   drop_na() ## remove all survey participants with missing data. 
 
-write_csv(final_clean_data_for_analysis, 
-          file="final_clean_data_for_analysis.csv", na="")
+write_csv(final_clean_data, file="final_clean_data.csv", na="")
 
 
 

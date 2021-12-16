@@ -4,7 +4,10 @@ library(tidyverse)
 
 # load test data
 nhanes_test = read_csv("data/clean/nhanes_test.csv", 
-                    col_types = "iififfdffifddffffffffffffffffffffiifffffff")
+                   col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
+
+nhanes_train = read_csv("data/clean/nhanes_train.csv", 
+                    col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
 
 # load ridge fit object
 load("results/ridge_fit.Rda")

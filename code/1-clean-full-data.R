@@ -12,6 +12,48 @@ library(naniar)
 
 demo_raw <- read_xpt(file = "data/raw/P_DEMO.XPT"); names(demo_raw) %<>% tolower #demographics
 
+acculturation_raw <- read_xpt(file = "data/raw/P_ACQ.XPT"); names(acculturation_raw) %<>% tolower
+
+audiometry_raw <- read_xpt(file = "data/raw/P_AUQ.XPT"); names(audiometry_raw) %<>% tolower
+
+cardio_raw <-read_xpt(file = "data/raw/P_CDQ.XPT"); names(cardio_raw) %<>% tolower
+
+health_status_raw <- read_xpt(file = "data/raw/P_HSQ.XPT"); names(health_status_raw) %<>% tolower
+
+dermatology_raw <- read_xpt(file = "data/raw/P_CDQ.XPT"); names(dermatology_raw) %<>% tolower
+
+diet_raw <- read_xpt(file = "data/raw/P_DBQ.XPT"); names(diet_raw) %<>% tolower
+
+childhood_raw <- read_xpt(file = "data/raw/P_ECQ.XPT"); names(childhood_raw) %<>% tolower
+
+insurance_raw <- read_xpt(file = "data/raw/P_HIQ.XPT"); names(insurance_raw) %<>% tolower
+
+hepatitis_raw <- read_xpt(file = "data/raw/P_HEQ.XPT"); names(hepatitis_raw) %<>% tolower
+
+hospitalization_raw <- read_xpt(file = "data/raw/P_HUQ.XPT"); names(hospitalization_raw) %<>% tolower
+
+immunization_raw <- read_xpt(file = "data/raw/P_IMQ.XPT"); names(immunization_raw) %<>% tolower
+
+kidney_raw <- read_xpt(file = "data/raw/P_KIQ_U.XPT"); names(kidney_raw) %<>% tolower
+
+oral_raw <- read_xpt(file = "data/raw/P_OHQ.XPT"); names(oral_raw) %<>% tolower
+
+osteoporosis_raw <- read_xpt(file = "data/raw/P_OSQ.XPT"); names(osteoporosis_raw) %<>% tolower
+
+pesticide_raw <- read_xpt(file = "data/raw/P_PUQMEC.XPT"); names(pesticide_raw) %<>% tolower
+
+prescription_raw <- read_xpt(file = "data/raw/P_RXQ_RX.XPT"); names(prescription_raw) %<>% tolower
+
+aspirin_raw <- read_xpt(file = "data/raw/P_RXQASA.XPT"); names(aspirin_raw) %<>% tolower
+
+reproductive_raw <- read_xpt(file = "data/raw/P_RHQ.XPT"); names (reproductive_raw) %<>% tolower
+
+tobacco_raw <- read_xpt(file = "data/raw/P_SMQRTU.XPT"); names(tobacco_raw) %<>% tolower
+
+secondhand_smoke_raw <- read_xpt(file = "data/raw/P_SMQSHS.XPT"); names(secondhand_smoke_raw) %<>% tolower
+
+toxicant_raw <- read_xpt(file = "data/raw/P_VTQ.XPT"); names(toxicant_raw) %<>% tolower
+
 mental_raw <- read_xpt(file = "data/raw/P_DPQ.XPT"); names(mental_raw) %<>% tolower #mental health
 
 physical_raw <- read_xpt(file = "data/raw/P_PAQ.XPT"); names(physical_raw) %<>% tolower #physical activity
@@ -31,29 +73,27 @@ occupation_raw<- read_xpt(file = "data/raw/P_OCQ.XPT"); names(occupation_raw) %<
 weight_hist_raw<- read_xpt(file = "data/raw/P_WHQ.XPT"); names(weight_hist_raw) %<>% tolower #weight history
 
 
+
 ### handle demographics dataset 
 demo <- demo_raw %>% 
   rename(subject="seqn",
          age="ridageyr", 
-         ratio_income="indfmpir",
-         race = "ridreth3",
-         edu = dmdeduc2,
-         marriage_status = "dmdmartz") %>%
+         ratio_income="indfmpir") %>%
   
-  replace_with_na(replace = list(marriage_status = c(77,99),  #77 and 99 mean Refused and DK
+  replace_with_na(replace = list(dmdmartz = c(77,99),  #77 and 99 mean Refused and DK
                                  dmdborn4 = c(77,99),
-                                edu = c(7,9))) %>% #7 and 9 mean Refused and DK
+                                 dmdeduc2 = c(7,9))) %>% #7 and 9 mean Refused and DK
   ## to facilitate lasso and random forest analysis later, I'm going to create some new variables
   mutate(female=ifelse(is.na(riagendr), NA, riagendr-1), ## female=1, male=0
-         #nonhisp_white=ifelse(is.na(ridreth3), NA, as.numeric(ridreth3==3)), ## non-hispanic white=1, all other=0
-         #never_married=ifelse(is.na(dmdmartz), NA, as.numeric(dmdmartz==3)), ## never married = 1, all others = 0
-         born_us=ifelse(is.na(dmdborn4), NA, as.numeric(dmdborn4==1))) %>%## born in the US = 1, others = 0
-         #edu_college=ifelse(is.na(dmdeduc2), NA, as.numeric(dmdeduc2 %in% c(4, 5)))) %>% ## education some college or above = 1, others = 0
+         nonhisp_white=ifelse(is.na(ridreth3), NA, as.numeric(ridreth3==3)), ## non-hispanic white=1, all other=0
+         never_married=ifelse(is.na(dmdmartz), NA, as.numeric(dmdmartz==3)), ## never married = 1, all others = 0
+         born_us=ifelse(is.na(dmdborn4), NA, as.numeric(dmdborn4==1)),## born in the US = 1, others = 0
+         edu_college=ifelse(is.na(dmdeduc2), NA, as.numeric(dmdeduc2 %in% c(4, 5)))) %>% ## education some college or above = 1, others = 0
   filter(age>=20) %>% ## take only 20+ year-old adults because only they have education recorded 
   
-  select(subject, female, age, race, 
-         marriage_status, ratio_income, 
-         born_us, edu) 
+  select(subject, female, age, nonhisp_white, 
+         never_married, ratio_income, 
+         born_us, edu_college) 
 
 
   
@@ -72,11 +112,11 @@ mental <- mental_raw %>%
                                   dpq080 = c(7,9),
                                   dpq090 = c(7,9),
                                   dpq100 = c(7,9))) %>%
-  rename(subject="seqn") %>%
+  #rename(subject="seqn") %>%
   mutate(mental_score=rowSums(cbind(dpq010, dpq020, dpq030, dpq040, dpq050, 
                               dpq060, dpq070, dpq080, dpq090, dpq100))) %>% 
   
-  select(subject, mental_score) 
+  select(seqn, mental_score) 
 
 
 ### smoking
@@ -96,12 +136,10 @@ smoking <- smoking_raw %>%
 sleep <- sleep_raw %>%
   rename(subject="seqn", 
          sleep_weekday="sld012",
-         sleep_weekend="sld013",
-         sleepy = "slq120") %>%  #overly sleepy during day
-  replace_with_na(replace = list(slq050 = c(7,9),
-                                 sleepy = c(7,9))) %>%
+         sleep_weekend="sld013") %>%
+  replace_with_na(replace = list(slq050 = c(7,9))) %>%
   mutate(dr_sleep=ifelse(is.na(slq050), NA, as.numeric(slq050==1))) %>% ## told doctor about trouble sleeping
-  select(subject, sleep_weekday, sleep_weekend, dr_sleep, sleepy)
+  select(subject, sleep_weekday, sleep_weekend, dr_sleep)
 
 ### medical condition
 
@@ -110,39 +148,28 @@ medical <- medical_raw %>%
   replace_with_na(replace = list(mcq010 = c(7.9),
                                  mcq160a = c(7,9),
                                  mcq160c = c(7,9),
-                                 mcq160l = c(7,9),
+                                 mcq160e = c(7,9),
                                  mcq160f = c(7,9),
                                  mcq160m = c(7,9),
-                                 mcq160p = c(7,9),
                                  mcq220 = c(7,9),
                                  mcq366a = c(7,9),
                                  mcq366b = c(7,9),
                                  mcq366c = c(7,9),
-                                 mcq371a = c(7,9),
-                                 mcq371b = c(7,9),
-                                 mcq371c = c(7,9),
-                                 mcq371d = c(7,9),
                                  mcq366d = c(7,9))) %>%
   mutate(told_asthma=ifelse(is.na(mcq010), NA, as.numeric(mcq010==1)), ## ever told you had asthma
          told_arthritis=ifelse(is.na(mcq160a), NA, as.numeric(mcq160a==1)), ## ever told to have arthritis
          told_coronary=ifelse(is.na(mcq160c), NA, as.numeric(mcq160c==1)), ## ever told to have coronary heart disease
-         told_liver=ifelse(is.na(mcq160l), NA, as.numeric(mcq160l==1)), ## ever told to have liver disease
-         told_copd=ifelse(is.na(mcq160p), NA, as.numeric(mcq160p==1)), #ever told by doctor to have copd
+         told_attack=ifelse(is.na(mcq160e), NA, as.numeric(mcq160e==1)), ## ever told to have heart attack
          told_stroke=ifelse(is.na(mcq160f), NA, as.numeric(mcq160f==1)), ## ever told to have a stroke
          told_thyroid=ifelse(is.na(mcq160m), NA, as.numeric(mcq160m==1)), ## ever told to have thyroid problem
          told_cancer=ifelse(is.na(mcq220), NA, as.numeric(mcq220==1)), ## ever told to have cancer or malignancy 
          told_weight=ifelse(is.na(mcq366a), NA, as.numeric(mcq366a==1)), ## ever told by health professional to lose weight
          told_exe=ifelse(is.na(mcq366b), NA, as.numeric(mcq366b==1)), ## ever told by health professional to exercise
          told_salt=ifelse(is.na(mcq366c), NA, as.numeric(mcq366c==1)), ## ever told by health professional to reduce salt in diet
-         now_lose_weight=ifelse(is.na(mcq371a), NA, as.numeric(mcq371a==1)), #now try to control weight
-         now_increase_ex=ifelse(is.na(mcq371b), NA, as.numeric(mcq371b==1)), #now try to increase exercise
-         now_reduce_salt=ifelse(is.na(mcq371c), NA, as.numeric(mcq371c==1)), #now try to reduce salt
-         now_reduce_fat=ifelse(is.na(mcq371d), NA, as.numeric(mcq371d==1)), #now try to reduce fat
          told_fat=ifelse(is.na(mcq366d), NA, as.numeric(mcq366d==1))) %>% ## ever told by health professional to lose fat/calories
   select(subject, told_asthma, told_arthritis, told_coronary,
-         told_liver, told_copd, told_stroke, told_thyroid, 
-         told_cancer, told_weight, told_exe, told_salt, told_fat,
-         now_lose_weight, now_increase_ex, now_reduce_salt, now_reduce_fat) 
+         told_attack, told_stroke, told_thyroid, 
+         told_cancer, told_weight, told_exe, told_salt, told_fat) 
 
 ## diabetes
 diabetes <- diabetes_raw %>%
@@ -203,14 +230,31 @@ weight_history <- weight_hist_raw%>%
 
 
 ### merge everything
-final_clean_data_for_analysis <- Reduce(function(x,y) left_join(x, y, 
-                                  by = "subject"), 
-         list(mental, demo, smoking, sleep, medical, diabetes, bp, occupation, 
-              physical_activity, weight_history)) %>%
+data_all <- Reduce(function(x,y) left_join(x, y, by = "seqn"), 
+         list(acculturation_raw, audiometry_raw, cardio_raw, health_status_raw, 
+              dermatology_raw, diet_raw, childhood_raw, insurance_raw, 
+              hepatitis_raw, hospitalization_raw, 
+              immunization_raw, kidney_raw, oral_raw, osteoporosis_raw, 
+              pesticide_raw, prescription_raw, aspirin_raw, reproductive_raw,
+              tobacco_raw, secondhand_smoke_raw, toxicant_raw, 
+              mental, demo_raw, smoking_raw, sleep_raw, medical_raw, 
+              diabetes_raw, bp_raw, occupation_raw, 
+              physical_raw, weight_hist_raw)) %>%
+  na.omit()
+  
   drop_na() ## remove all survey participants with missing data. 
+  
+  
+join_1 <- merge(acculturation_raw, audiometry_raw, cardio_raw, health_status_raw, 
+                     dermatology_raw, diet_raw, childhood_raw, insurance_raw, 
+                     hepatitis_raw, hospitalization_raw, 
+                     immunization_raw, kidney_raw, oral_raw, osteoporosis_raw, 
+                     pesticide_raw, prescription_raw, aspirin_raw, reproductive_raw,
+                     tobacco_raw, secondhand_smoke_raw, toxicant_raw, 
+                     mental, demo_raw, smoking_raw, sleep_raw, medical_raw, 
+                     diabetes_raw, bp_raw, occupation_raw, 
+                     physical_raw, weight_hist_raw, by = "seqn", all = TRUE)
 
-write_csv(final_clean_data_for_analysis, 
-          file="final_clean_data_for_analysis.csv", na="")
-
+write_csv(final_clean_data, file="final_clean_data.csv", na="")
 
 

@@ -1,6 +1,6 @@
 # read in the cleaned data
-nhanes_data = read_csv("data/clean/final_clean_data.csv", 
-                       col_types = "iififfdffifddffffffffffffffffffffiifffffff")
+nhanes_data = read_csv("data/clean/final_clean_data_for_analysis.csv", 
+                      col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
 
 
 # split into train and test 
