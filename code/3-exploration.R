@@ -3,6 +3,7 @@ library(kableExtra)                     # for printing tables
 library(cowplot)                        # for side by side plots
 library(tidyverse)
 
+
 # read in the cleaned data
 nhanes_train = read_csv("data/clean/nhanes_train.csv", 
                     col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
@@ -18,94 +19,169 @@ median_mh_score = nhanes_train %>%
   pull()
 
 # create histogram of mental health score
-histogram = nhanes_train %>%
+mh_histogram = nhanes_train %>%
   ggplot(aes(x = mental_score)) + 
-  geom_histogram() +
-  geom_vline(xintercept = mean_mh_score,
+  geom_histogram(binwidth = 1) +
+  geom_vline(xintercept = median_mh_score,
+             color = "red",
              linetype = "dashed") +
   labs(x = "Mental health screening scores", 
        y = "Frequency") +
   theme_bw()
 
+ratio_income_histogram = nhanes_train %>%
+  ggplot(aes(x = ratio_income)) + 
+  geom_histogram(binwidth = 1) +
+  geom_vline(xintercept = median(nhanes_train$ratio_income),
+             color = "red",
+             linetype = "dashed") +
+  labs(x = "Ratio of family income to poverty", 
+       y = "Frequency") +
+  theme_bw()
+
+
 # save the histogram
 ggsave(filename = "results/mental-health-score-histogram.png", 
-       plot = histogram, 
+       plot = mh_histogram, 
        device = "png", 
        width = 5, 
        height = 3)
 
 # examine relationship between ratio of family income to poverty and mental health risk
-p1 = nhanes_train %>%
+p1 = nhanes_train %>%  #data points and binscatter 
   ggplot(aes(x = ratio_income, y = mental_score)) +
   geom_point() + 
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point') +
   labs(x = "Ratio of family income to poverty", 
        y = "Mental health screening score",
-  title = "Income and mental health risk") +
+  title = bquote (~bold("Income and mental health risk")))+
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 
-# save p1
+plot1 = nhanes_train %>%  #just with binscatter for easier visualization 
+  ggplot(aes(x = ratio_income, y = mental_score)) +
+ 
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point')+
+  
+  labs(x = "Ratio of family income to poverty", 
+       y = "Mental health screening score",
+       title = bquote (~bold("Income and mental health risk")))+
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# save plot1
 ggsave(filename = "results/income-and-mental-health.png", 
-       plot = p1, 
+       plot = plot1, 
        device = "png", 
        width = 5, 
        height = 3)
 
 # examine relationship between age and mental health risk
-p2 = nhanes_train %>%
+
+p2 = nhanes_train %>%  #data points and binscatter 
   ggplot(aes(x = age, y = mental_score)) +
   geom_point() + 
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point') +
   labs(x = "Age", 
        y = "Mental health screening score",
-       title = "Age and mental health risk") +
+       title = bquote (~bold("Age and mental health risk")))+
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 
-# save p2
+plot2 = nhanes_train %>%  #just with binscatter for easier visualization 
+  ggplot(aes(x = age, y = mental_score)) +
+  
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point')+
+  
+  labs(x = "Age", 
+       y = "Mental health screening score",
+       title = bquote (~bold("Age and mental health risk")))+
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# save plot2
 ggsave(filename = "results/age-and-mental-health.png", 
-       plot = p2, 
+       plot = plot2, 
        device = "png", 
        width = 5, 
        height = 3)
 
+
 # examine relationship between age first started smoking and mental health risk
-p3 = nhanes_train %>%
+
+p3 = nhanes_train %>%  #data points and binscatter 
   ggplot(aes(x = age_first_smoke, y = mental_score)) +
   geom_point() + 
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "Age first smoking", 
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point') +
+  labs(x = "Age started smoking regularly", 
        y = "Mental health screening score",
-       title = "Age started smoking and mental health risk") +
+       title = bquote (~bold("Age of smoking and mental health risk")))+
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 
-# save p3
-ggsave(filename = "results/age-and-mental-health.png", 
-       plot = p3, 
+plot3 = nhanes_train %>%  #just with binscatter for easier visualization 
+  ggplot(aes(x = age_first_smoke, y = mental_score)) +
+  
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point')+
+  
+  labs(x = "Age started smoking regularly", 
+       y = "Mental health screening score",
+       title = bquote (~bold("Age of smoking and mental health risk")))+
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# save plot3
+ggsave(filename = "results/age-smoke-and-mental-health.png", 
+       plot = plot3, 
        device = "png", 
        width = 5, 
        height = 3)
 
+
 # examine relationship between sleep during weekday and mental health risk
-p4 = nhanes_train %>%
+p4 = nhanes_train %>%  #data points and binscatter 
   ggplot(aes(x = sleep_weekday, y = mental_score)) +
   geom_point() + 
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "Hours of sleep during weekday", 
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point') +
+  labs(x = "Hours of weekday sleep", 
        y = "Mental health screening score",
-       title = "Hours of sleep during weekday and mental health risk") +
+       title = bquote (~bold("Hours of weekday sleep and mental health risk")))+
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 
-# save p4
-ggsave(filename = "results/age-and-mental-health.png", 
-       plot = p4, 
+plot4 = nhanes_train %>%  #just with binscatter for easier visualization 
+  ggplot(aes(x = sleep_weekday, y = mental_score)) +
+  
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point')+
+  
+  labs(x = "Hours of weekday sleep", 
+       y = "Mental health screening score",
+       title = bquote (~bold("Hours of weekday sleep and mental health risk")))+
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# save plot4
+ggsave(filename = "results/weekday-sleep-and-mental-health.png", 
+       plot = plot4, 
        device = "png", 
        width = 5, 
        height = 3)
-
 
 # examine relationship between sleep during weekend and mental health risk
 p5 = nhanes_train %>%
@@ -166,6 +242,13 @@ ggsave(filename = "results/age-and-mental-health.png",
 p8 = nhanes_train %>%
   ggplot(aes(x = female, y = mental_score, fill = female)) + 
   geom_boxplot() +
+  labs(x = "Gender", 
+       y = "Mental health screening score") + 
+  theme_bw() + theme(legend.position = "none")
+
+p8_hist = nhanes_train %>%
+  ggplot(aes(x = female, y = mental_score)) + 
+  geom_histogram() +
   labs(x = "Gender", 
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")

@@ -8,8 +8,9 @@ nhanes_train = read_csv("data/clean/nhanes_train.csv",
                     col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
 
 #run OLS
+
 set.seed(1)
-ols  = lm (log(mental_score) ~. - subject, data = nhanes_train)
+ols = lm(mental_score ~., - subject, data = nhanes_train)
 summary(ols)
 
 
@@ -23,8 +24,18 @@ ridge_fit = cv.glmnet(mental_score ~ . - subject,
 # save the ridge fit object
 save(ridge_fit, file = "results/ridge_fit.Rda")
 
-# lambda based on one-standard-error rule (161)
-ridge_fit$lambda.1se
+# create ridge CV plot
+png(width = 6, 
+    height = 4,
+    res = 300,
+    units = "in", 
+    filename = "results/ridge-cv-plot.png")
+plot(ridge_fit)
+dev.off()
+
+
+# lambda based on one-standard-error rule 
+ridge_fit$lambda.1se   #39.8
 
 #To get the fitted coefficients at lambda based on the one-standard-error-rule:
 coef(ridge_fit, s = "lambda.1se") %>% head()
@@ -32,9 +43,13 @@ coef(ridge_fit, s = "lambda.1se") %>% head()
 #create ridge CV plot
 plot_glmnet(ridge_fit, nhanes_train)
 
-plot_glmnet(ridge_fit, nhanes_train, features_to_plot = 7)
+ridge_plot = plot_glmnet(ridge_fit, nhanes_train, features_to_plot = 10)
 
-#dr_sleep, female, ratio_income, vigor_rec, weight_self_percept
+ggsave(filename = "results/ridge-trace-plot.png", 
+       plot = ridge_plot, 
+       device = "png", 
+       width = 6, 
+       height = 4)
 
 # run lasso regression
 set.seed(1)
@@ -55,6 +70,12 @@ png(width = 6,
 plot(lasso_fit)
 dev.off()
 
+#value of lambda based on the one-standard-error rule
+lambda_lasso = lasso_fit$lambda.1se  #0.538
+
+#number of features (excluding the intercept) are selected if lambda is chosen according to the one-standard-error rule 
+num_features = lasso_fit$nzero[lasso_fit$lambda == lasso_fit$lambda.1se]  #6
+
 # create lasso trace plot
 lasso_plot = plot_glmnet(lasso_fit, nhanes_train, features_to_plot = 6)
 ggsave(filename = "results/lasso-trace-plot.png", 
@@ -63,7 +84,7 @@ ggsave(filename = "results/lasso-trace-plot.png",
        width = 6, 
        height = 4)
 
-# extract features selected by lasso and their coefficients (dr_sleep)
+# extract features selected by lasso and their coefficients 
 beta_hat_std = extract_std_coefs(lasso_fit, nhanes_train)
 beta_hat_std %>%
   filter(coefficient != 0) %>%
@@ -80,11 +101,28 @@ elnet_fit = cva.glmnet(mental_score ~ . -subject,
 
 elnet_fit_best = extract_best_elnet(elnet_fit)
 
+# save the elnet fit object
+save(elnet_fit, file = "results/elnet_fit.Rda")
+
+# create elnet CV plot
+png(width = 6, 
+    height = 4,
+    res = 300,
+    units = "in", 
+    filename = "results/elnet-cv-plot.png")
 plot(elnet_fit_best)
+dev.off()
+
 
 #create elastic net regression trace plot (sleep, female, ratio_income, vigor_rec)
 
 plot_glmnet(elnet_fit_best, nhanes_train)
 
-plot_glmnet(elnet_fit_best, nhanes_train, features_to_plot = 6)
+elnet_plot = plot_glmnet(elnet_fit_best, nhanes_train, features_to_plot = 10)
+
+ggsave(filename = "results/elnet-trace-plot.png", 
+       plot = elnet_plot, 
+       device = "png", 
+       width = 6, 
+       height = 4)
 

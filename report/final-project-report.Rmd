@@ -1,7 +1,7 @@
 ---
-title: 'COVID-19 and County Health'
-author: 'Seokyoon Chang, Jessica Mixon, Greta Maayan Waldman (Edited by Eugene Katsevich)'
-date: 'May 2, 2021'
+title: 'Examining predictors of mental health'
+author: 'Dung Pham'
+date: 'Dec 2021'
 output:
   bookdown::pdf_document2:
     number_sections: yes
@@ -18,7 +18,7 @@ library(kableExtra)
 
 \bigskip
 
-The code to reproduce this report is available [on Github](https://github.com/Katsevich-Teaching/final-project-template).
+The code to reproduce this report is available [on Github](https://github.com/dphamvu/NHANES).
 
 \newpage
 
@@ -61,7 +61,7 @@ Our central task in the data cleaning phase of the project was merging the data 
 
 ### Observations
 
-Our dataset has a total of 935 observations, corresponding to each of the counties included in our analysis.
+Our dataset has a total of 922 observations, 41 features and one response variable.
 
 ### Response Variable
 
@@ -79,10 +79,10 @@ Before building our predictive models, we first removed observations from the da
 
 ### Response
 
-We first sought to understand the response variable’s distribution. As seen in the histogram of deaths variable (Figure \@ref(fig:response-histogram)), the data appears to be right-skewed, with some counties exceeding a death per cases rate of 0.1.  The median deaths per cases is 0.018. We proceeded to determine which counties had extreme response rates by looking at the sorted data. The sorted data (Table \@ref(tab:top-10-counties)) shows that aggregated across 2020, the highest rates of deaths per cases were primarily in northeastern states such as New York, New Jersey, and Connecticut.
+To provide an overview of the data, I explored summary statistics on the training dataset (n=738). The response variable (mental health screening scores) has a mean of 4.9 on a scale from 0 to 30, with higher score indicative of higher mental health risks. The histogram in Figure \@ref(fig:mh-histogram) suggests that the distribution of the response variable is right-skewed, with the median value of 3. The median age of the sample is 44 with non-Hispanic White (43%) and non-Hispanic Black (22%) as the majority ethnicity/racial groups. Nearly half of the sample is married or living with a partner (57%); 23% reported to be single. The majority of participants were US-born (80%) and have some college or AA degree (41%). About 18% of the sample have obtained a college degree or higher. The gender breakdown in the training data is 41% and 59% for female and male participants respectively. Based on the US Census definition, 17% of the sample reported to be below the poverty level (having an income-to-poverty ratio of less than 1). The median ratio of family income to poverty in the training dataset is 2.32 (232% above poverty baseline), and 15% of subjects are at least 500% above the poverty threshold (having a ratio of 5 and above). Table \@ref(tab:) shows the main demographic and summary statistics of the training dataset.
 
-```{r response-histogram, out.width = "80%", fig.cap = "Distribution of case-fatality rate; vertical dashed line indicates the median.", fig.align='center', echo = FALSE}
-knitr::include_graphics("../results/response-histogram.png")
+```{r mh-histogram, out.width = "80%", fig.cap = "Histogram of mental health scores; vertical dashed line indicates the median.", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/mental-health-score-histogram.png")
 ```
 
 ```{r top-10-counties, message = FALSE, echo = FALSE}
@@ -96,8 +96,19 @@ read_tsv("../results/top-10-counties-data.tsv") %>%
 ```
 
 ### Features
+In this section, I explored the potential association between the predictor variables and response variable. 
 
-[Omitted from template.]
+Sleep
+
+Smoking
+
+Medical conditions
+
+Work 
+
+Physical activity and diet 
+
+Self-perception about weight 
 
 # Modeling
 
@@ -105,16 +116,30 @@ read_tsv("../results/top-10-counties-data.tsv") %>%
 
 ### Ordinary least squares
 
-[Omitted from template.]
+First, I conducted an ordinary least squares (OLS) regression of mental health scores on all 41 features. The OLS regression showed the following variable responses to be significantly correlated with the response at the .05 level: gender, ratio of family income to poverty, having a liver condition, self-perception about weight. At the .01 level, engaging in vigorous-intensity recreational activities was shown to have a statistically significant association with mental health risk scores. At the .001 level, sleep is a significant predictor of mental health risk. Being male, having higher ratio of family income to poverty, considering oneself now to be at the right weight, ever having had a liver condition are statistically associated with lower mental health risk scores. On the other hand, having ever told a health a professional that you had trouble sleeping and feeling overly sleepy during the day are statistically correlated with higher depression scores. 
 
 ### Penalized regression
 
-Despite the ordinary least squares method seeming to work well, we realized that fitting a linear model with so many explanatory variables might incur a large cost in variance and lead to suboptimal predictions. Hence, we decided to build and evaluate shrinkage models with the hopes of getting a more parsimonious and interpretable model. We ran three cross-validated regressions for which optimal values of lambda were chosen according to the one-standard-error rule: ridge, LASSO (Least Absolute Shrinkage and Selection Operator), and elastic net. 
+To address potential high variance in the OLS regression model with a large number of explanatory variables, I employed cross-validated ridge, LASSO (Least Absolute Shrinkage and Selection Operator) and elastic net regression, choosing lambda based on the one-standard-error rule. Elastic net regression contains all the features selected by lasso, plus 22 other features. Below is the list of the variables selected by each method. 
 
-For the lasso, Figure \@ref(fig:lasso-CV-plot) shows the CV plot, Figure \@ref(fig:lasso-trace-plot) shows the trace plot, and Table \@ref(tab:lasso-coefficients) shows the selected features and their coefficients. 
+**LASSO**: ever told your doctor/health profession that you had trouble sleeping, ratio of family income to poverty, how often feel overly sleepy during the day
 
-[Interpretation of lasso omitted from this template. Other penalized regression methods omitted from this template.]
+**Elastic net regression**: age, high blood pressure and cholesterol, ever told your doctor/health profession that you had trouble sleeping, education, gender, moderate-intensity activity at work, now increasing exercise, now controlling or losing weight, now reducing fat in diet, now reducing salt in diet, now smoking, race, ratio family income to poverty, hours of weekday sleep, hours of weekend sleep, how often feel overly sleepy during the day, told by doctor to have COPD, told by doctor to exercise, told by doctor to have a liver condition, told by doctor to have a stroke, told by doctor to have thyroid problem, told by doctor to be overweight, doing vigorous-intensity recreational activities, want to weigh more or less or the same, self-perception about one's weight
 
+For ridge regression, Figure \@ref(fig:ridge-CV-plot) shows the CV plot, Figure \@ref(fig:ridge-trace-plot) shows the trace plot with top 10 selected features.
+
+For lasso, Figure \@ref(fig:lasso-CV-plot) shows the CV plot, Figure \@ref(fig:lasso-trace-plot) shows the trace plot, and Table \@ref(tab:lasso-coefficients) shows the selected features and their coefficients. 
+
+
+For elastic net regression, Figure \@ref(fig:elnet-CV-plot) shows the CV plot, Figure \@ref(fig:elnet-trace-plot) shows the trace plot with top 10 selected features
+
+```{r ridge-CV-plot, out.width = "90%", fig.cap = "Ridge CV plot.", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/ridge-cv-plot.png")
+```
+
+```{r ridge-trace-plot, out.width = "90%", fig.cap = "Ridge trace plot.", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/ridge-trace-plot.png")
+```
 
 ```{r lasso-CV-plot, out.width = "90%", fig.cap = "Lasso CV plot.", fig.align='center', echo = FALSE}
 knitr::include_graphics("../results/lasso-cv-plot.png")
@@ -134,9 +159,15 @@ read_tsv("../results/lasso-features-table.tsv") %>%
   kable_styling(position = "center")
 ```
 
-## Tree-based methods
+```{r elnet-CV-plot, out.width = "90%", fig.cap = "Elastic net regression CV plot.", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/elnet-cv-plot.png")
+```
 
-[Omitted from template.]
+```{r elnet-trace-plot, out.width = "90%", fig.cap = "Elastic net regression trace plot.", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/elnet-trace-plot.png")
+```
+
+## Tree-based methods
 
 ### Random forest
 
@@ -254,3 +285,7 @@ Below are the 41 features we used for analysis. Words written in parentheses rep
   - Traffic volume (`traffic_volume`): Average traffic volume per meter of major roadways in the county.
   - Homeownership (`homeownership`): Percentage of occupied housing units that are owned.
   - Severe housing cost burden (`severe_ownership_cost`): Percentage of households that spend 50% or more of their household income on housing.
+  
+  
+#References
+U.S. Census Bureau, Population Division, Fertility & Family Statistics Branch. (2004). Current Population Survey: Definitions and explanations. Retrieved from http://www.census.gov/population/www/cps/cpsdef.html
