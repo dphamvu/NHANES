@@ -4,7 +4,7 @@ source("code/functions/plot_glmnet.R")            # for lasso/ridge trace plots
 
 # read in the training data
 
-nhanes_train = read_csv("data/clean/nhanes_train.csv", 
+nhanes_train = read_csv("data/NA/nhanes_train.csv", 
                     col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
 
 #run OLS
@@ -114,7 +114,7 @@ plot(elnet_fit_best)
 dev.off()
 
 
-#create elastic net regression trace plot 
+#create elastic net regression trace plot (sleep, female, ratio_income, vigor_rec)
 
 plot_glmnet(elnet_fit_best, nhanes_train)
 
@@ -126,10 +126,3 @@ ggsave(filename = "results/elnet-trace-plot.png",
        width = 6, 
        height = 4)
 
-# extract features selected by elnet and their coefficients 
-
-beta_hat_std_elnet = extract_std_coefs(elnet_fit_best, nhanes_train)
-beta_hat_std_elnet %>%
-  filter(coefficient != 0) %>% 
-arrange(desc(abs(coefficient))) %>% 
-  write_tsv("results/elnet-features-table.tsv")

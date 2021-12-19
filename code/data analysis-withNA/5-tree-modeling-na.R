@@ -244,27 +244,6 @@ optimal_num_trees   #34
 #To get the variable importance measures
 
 summary(gbm_fit_optimal, n.trees = optimal_num_trees, plotit = FALSE)  
-
-#create table
-
-tibble(Variable = c("How often feeling overly sleepy during the day", 
-                    "Ever told a doctor about trouble sleeping",
-                    "Age",
-                    "Age started smoking regularly",
-                    "Ratio of family income to poverty",
-                    "Hours of weekend sleep",
-                    "Hours of weekday sleep",
-                    "Race",
-                    "Education",
-                    "Gender"), 
-       
-       `Relative influence` = c(16.561,11.880,11.441,
-                                8.567,8.012,7.255,
-                                5.932,5.108,3.482,2.434)) %>%
-  write_tsv("results/Variable importance of the boosted model.tsv")
-
-  
- 
 #create partial dependence plots 
 
 partial_dependence_plot_1 = plot(gbm_fit_optimal, 

@@ -171,7 +171,38 @@ knitr::include_graphics("../results/elnet-trace-plot.png")
 
 ### Random forest
 
+Random forest is one of the state-of-the-art tools for prediction. For best predictive performance, m (the number of variables to sample at each split) was tuned via out-of-bag error (OOB). The model was trained on different values of m, ranging from 1 to 41 as the total number of features in the data was 41. Figure \@ref(fig:oob-vs-m) displays that OOB error was the lowest at m value of 5. B parameter (the number of bootstrap samples) was set to the default value of 500. The random forest model was then fitted using the tuned m and B values. To confirm that the OOB error had indeed flattened out, I plotted a graph of OOB errors using the tuned m value (Figure \@ref(fig:oob-ntree-mtuned). 
+
+Random forest provides two measures of variable importance. Mean Decrease Accuracy (%IncMSE) shows how much the model accuracy will decrease if we exclude a certain variable. Mean Decrease Gini (IncNodePurity) measures variable importance based on the Gini impurity index; it indicates the total decrease in node impurity that results from splits over a given variable averaged over all trees. The higher the value of mean decrease accuracy or mean decrease gini, the higher the importance of the variable to the model. Based on Figure \@ref(fig:rf-varImp-plot), how often an individual feel overly sleepy during the day is an important variable in both measures. Hours of weekday sleep and race are also among the top prominent variables.
+
+
+```{r oob-vs-m, out.width = "90%", fig.cap = "Tuning m: OOB errors", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/oob-error-m.png")
+```
+
+```{r oob-ntree-mtuned, out.width = "90%", fig.cap = "OOB errors by ntree, m = 5", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/oob-error-vs-ntree-tuned-m.png")
+```
+
+```{r rf-varImp-plot, out.width = "90%", fig.cap = "Random Forest Variable Importance plot", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/rf-varImp-plot.png")
+```
+
 ### Boosting
+
+Boosting is another method that aggregates multiple decision trees to reduce variance and improve prediction. I tested out with the default parameters of 100 trees, an interaction depth of 1, a shrinkage factor of 0.1, and a subsampling fraction π of 0.5. Unlike random forests, the number of trees B controls the complexity of the fit and therefore must be tuned via cross-validation. After experimentation, the optimal number of trees was identified to be 57. Using this number, I tuned the interaction depth of the model by testing different interaction depths from 1 to 5. Figure \@ref(fig:interaction-depth) shows that an interaction depth of 4 results in the smallest cross-validation error with 34 trees. Table \@ref(tab:boosting-varImp) displays the top 10 most important variables selected by the boosted model. 
+
+```{r interaction-depth, out.width = "90%", fig.cap = "Tuning Interaction Depth", fig.align='center', echo = FALSE}
+knitr::include_graphics("../results/tuning-interaction-depth.png")
+```
+
+```{r boosting-varImp, message = FALSE, echo = FALSE}
+read_tsv("../results/Variable importance of the boosted model.tsv") %>%
+  kable(format = "latex", row.names = NA,
+        booktabs = TRUE, digits = 2,
+        caption = "Variables and their relative importance in the boosted model.") %>%
+  kable_styling(position = "center")
+```
 
 # Conclusions
 
@@ -180,17 +211,18 @@ knitr::include_graphics("../results/elnet-trace-plot.png")
 ```{r model-evaluation, message = FALSE, echo = FALSE}
 read_tsv("../results/model-evaluation.tsv") %>%
   kable(format = "latex", row.names = NA,
-        booktabs = TRUE, digits = 2,
-        caption = "Root-mean-squared prediction errors for lasso and ridge regressions.") %>%
+        booktabs = TRUE, digits = 3,
+        caption = "Root-mean-squared prediction errors for OLS, ridge, lasso, elastic net regression, random forest and boosting.") %>%
   kable_styling(position = "center")
 ```
 
-Table \@ref(tab:model-evaluation) shows the test RMSE for all the methods considered. Except for the OLS, the random forest and the boosted model have the lowest test errors. This is reasonable given these models’ tendencies to have high predictive accuracy. Between the two, the boosted model has the lowest test error, with a mean squared error of 0.000139, but it is closely followed by random forest, which has a mean squared error of 0.00141. Notably, however, the ridge, LASSO, and elastic net regressions perform about as well, with test MSEs of 0.000158, 0.000164, and 0.000161, respectively. Although OLS has the lowest training and test error, its adjusted R-squared value was only about 0.3, and there were too many features given the number of observations.
+Table \@ref(tab:model-evaluation) shows the test root mean squared error (test RMSE) for all the methods considered. Known for its high predictive accuracy, the boosted model results in the lowest test RMSE of 4.00, closely followed by ordinary least squares regression (4.095). It's worth noting that the latter method (OLS) has an adjusted R-squared value of only 0.172 with a lot of features (41 features) in its model. Ridge, elastic net regression and LASSO also performed not too far below boosting and OLS, with their test RMSE values of 4.12 and 4.16 respectively (ridge and elastic net regression have the same predictive performance). Random forest surprisingly resulted in the highest test RMSE (4.24) among the methods, only slightly better than the intercept-only model (4.268). The training RMSE in the random forest model (1.884) is also much lower than its RMSE, suggestive of overfitting. 
 
-Regardless of these differences in test MSE, the methods overlap significantly in their identification of important variables from the larger set. For instance, the elastic net regression selects the following variables, which are also selected by LASSO and deemed significant in the OLS model: other providers ratio, unemployment, income inequality, housing overcrowding, residential segregation—non-White/White, homeownership, and physical inactivity. The random forest and boosting models both include low birthweight percentage, median income, and unemployment percentage in the top 10 most important variables, as measured by their contributions to node purity. 
-
+Regardless of the different approaches in prediction and test RMSE, these methods all indicate sleep as an important predictor of mental health/depression screening scores. In particular, how often one feels overly sleepy during the day and/or whether the individual has ever told a doctor about having trouble with sleep are most reliably predictive of mental well-being among the set of selected features in this data. Ratio of family income to poverty also appears in all six methods. Other variables ware also shared between different methods, such as gender (OLS, ridge, elnet, boosting), vigorous-intensity recreational activities (OLS, ridge, elnet, random forest, boosting), self-perception about one's weight (OLS, ridge, elnet, boosting). 
 
 ## Takeaways
+
+Results from the NHANES survey show that sleep is an important predictor of mental health risks and depression. The boosted model with the highest predictive performance indicates several items related to sleep, such as the frequency of feeling overly sleepy during the day, whether an individual talked to a health professional about sleep difficulty and hours of sleep during weekday and on the weekend. Ratio of family income to poverty is also one of the highlighted features in this model. The fact that sleep and income also appear in all other methods (except for hours of weekday and weekend sleep) reinforces the significance of these two factors in mental health. 
 
 Our results point to a few key determinants of health that, given their impact on COVID-19 deaths per cases rates in 2020, policymakers should consider when aiming to improve factors that would improve health overall but also potentially mitigate the mortality risk of another pandemic. The boosted model, which had the strongest predictive performance, suggests that residential segregation between non-white and white residents is the most important variable in predicting a county’s COVID-19 deaths per cases rate. The unemployment rate, availability of physical exercise opportunities, and measures of home ownership burden variables were also highly important in this model. These variables are identified across all models suggesting these relationships are robust. Residential segregation, unemployment, and home ownership burden are socioeconomic factors that affect an individual’s ability to access and pay for healthcare. In that regard, it is unsurprising that these factors would have a greater ability to predict differences in COVID-19 case fatalities across different counties in the United States. While some behavioral variables are also found to be significant (including STI incidence, high school completion, and others identified in the elastic net and lasso regressions), the variable importance ranking from the boosted model provides a highly interpretable hierarchy of the most influential factors from the greater set.
 
