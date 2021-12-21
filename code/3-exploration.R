@@ -409,14 +409,6 @@ p21 = nhanes_train %>%
   theme_bw() + theme(legend.position = "none")
 
 
-#examine relationship between being told by doctor to lose weight and mental health risk 
-  ggplot(aes(x = told_weight, y = mental_score, fill = told_weight)) + 
-  geom_boxplot() +
-  labs(x = "Told by a doctor to lose weight", 
-       y = "Mental health screening score") + 
-  theme_bw() + theme(legend.position = "none")
-
-
 #examine relationship between being told by doctor to exercise and mental health risk 
 p23 = nhanes_train %>%
   ggplot(aes(x = told_exe, y = mental_score, fill = told_exe)) + 
