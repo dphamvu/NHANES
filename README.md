@@ -14,7 +14,7 @@ interviews and physical examinations to assess the health and nutritional status
 
 Analysis<br/>
 
-Missing values were removed from the dataset, resulting in a total of 922 responses in the final data file. Data was split into training and test sets for a 80-20 ratio. First, I explored the relationships between different variables on the training data. Six different cross-validated predictive models were then built, including ordinary least squares, ridge regression, LASSO regression, elastic net regression, random forest, and boosting. For the tree-based models, the boosted model had the lowest test error as well as the lowest test error among the six methods.Within the regression models, OLS had the lowest test error, followed by ridge and elastic net regression (which had the same predictive performance).
+Missing values were removed from the dataset, resulting in a total of 922 responses in the final data file. Data was split into training and test sets for a 80-20 ratio. First, I explored the relationships between different variables on the training data. Six different cross-validated predictive models were then built, including ordinary least squares, ridge regression, LASSO regression, elastic net regression, random forest, and boosting. For the tree-based models, the boosted model had the lowest test error as well as the lowest test error among the six methods. Within the regression models, OLS had the lowest test error, followed by ridge and elastic net regression (which had the same predictive performance).
 
 Conclusions<br/>
 
