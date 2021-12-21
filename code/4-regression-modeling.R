@@ -1,18 +1,22 @@
 # load libraries
 library(glmnetUtils)                    # to run ridge and lasso
 source("code/functions/plot_glmnet.R")            # for lasso/ridge trace plots
-
+library(tidyverse)
+library(readr)
 # read in the training data
 
 nhanes_train = read_csv("data/clean/nhanes_train.csv", 
                     col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
+                    
 
 #run OLS
 
 set.seed(1)
-ols = lm(mental_score ~., - subject, data = nhanes_train)
-summary(ols)
+ols_fit = lm(mental_score ~., - subject, data = nhanes_train)
+summary(ols_fit)
 
+# save the OLS fit object
+save(ols_fit, file = "results/ols_fit.Rda")
 
 # run ridge regression
 set.seed(1)

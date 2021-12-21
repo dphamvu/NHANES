@@ -1,10 +1,13 @@
 # load libraries
 library(glmnetUtils)
 library(tidyverse)
+library(readr)
 
 # load test data
 nhanes_test = read_csv("data/clean/nhanes_test.csv", 
                    col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
+
+                   
 
 nhanes_train = read_csv("data/clean/nhanes_train.csv", 
                     col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
@@ -19,7 +22,7 @@ load("results/lasso_fit.Rda")
 load("results/elnet_fit.Rda")
 
 #evaluate OLS test RMSE
-ols_predictions = predict(ols, newdata = nhanes_test) %>% as.numeric()
+ols_predictions = predict(ols_fit, newdata = nhanes_test) %>% as.numeric()
 
 ols_RMSE = sqrt(mean((nhanes_test$mental_score-ols_predictions)^2))
 
@@ -66,7 +69,7 @@ constant_RMSE = sqrt(mean((training_mean_response-nhanes_test$mental_score)^2))
 
 
 #evaluate OLS training RMSE  #3.97
-ols_predictions_tr = predict(ols, newdata = nhanes_train) %>% as.numeric()
+ols_predictions_tr = predict(ols_fit, newdata = nhanes_train) %>% as.numeric()
 
 ols_RMSE_tr = sqrt(mean((nhanes_train$mental_score-ols_predictions_tr)^2))
 

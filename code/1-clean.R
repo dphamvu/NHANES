@@ -43,12 +43,11 @@ demo <- demo_raw %>%
   replace_with_na(replace = list(marriage_status = c(77,99),  #77 and 99 mean Refused and DK
                                  dmdborn4 = c(77,99),
                                 edu = c(7,9))) %>% #7 and 9 mean Refused and DK
-  ## to facilitate lasso and random forest analysis later, I'm going to create some new variables
+  
   mutate(female=ifelse(is.na(riagendr), NA, riagendr-1), ## female=1, male=0
-         #nonhisp_white=ifelse(is.na(ridreth3), NA, as.numeric(ridreth3==3)), ## non-hispanic white=1, all other=0
-         #never_married=ifelse(is.na(dmdmartz), NA, as.numeric(dmdmartz==3)), ## never married = 1, all others = 0
+         
          born_us=ifelse(is.na(dmdborn4), NA, as.numeric(dmdborn4==1))) %>%## born in the US = 1, others = 0
-         #edu_college=ifelse(is.na(dmdeduc2), NA, as.numeric(dmdeduc2 %in% c(4, 5)))) %>% ## education some college or above = 1, others = 0
+         
   filter(age>=20) %>% ## take only 20+ year-old adults because only they have education recorded 
   
   select(subject, female, age, race, 
@@ -88,7 +87,6 @@ smoking <- smoking_raw %>%
                                  now_smoke = c(7,9))) %>%
   
   select(subject, age_first_smoke, now_smoke)
-
 
 
 

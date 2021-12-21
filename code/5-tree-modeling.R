@@ -3,10 +3,13 @@ library(rpart.plot)        # install.packages("rpart.plot")
 library(tidyverse)
 library(randomForest)
 library(gbm)
+library(readr)
 
 #read in the training data
 nhanes_train = read_csv("data/clean/nhanes_train.csv",
                       col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
+
+                      
 
 #Fitting and plotting a regression tree using default parameters
 
@@ -20,7 +23,7 @@ png(width = 6,
 rpart.plot(tree_fit)
 dev.off()
 
-#variable importance of the tree fit model: dr_sleep, age_first_smoke, ratio_income, sleepy, age, dr_highchol, dr_diabetes, race, told_fat, sleep_weekend, hours_worked, min_sedentary, now_smoke, told_weight, told_thyroid, sleep_weekday, edu, told_copd, told_stroke, told_liver
+#variable importance of the tree fit model
 tree_fit$variable.importance
 
 #optimal tree

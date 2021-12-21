@@ -2,18 +2,21 @@
 library(kableExtra)                     # for printing tables
 library(cowplot)                        # for side by side plots
 library(tidyverse)
+library(readr)
 
 
 # read in the cleaned data
 nhanes_train = read_csv("data/clean/nhanes_train.csv", 
                     col_types = "iififfdffifddfffffffffffffffffffffiifffffff")
 
+                   
+
 # calculate mean mental health score  (4.9)
 mean_mh_score = nhanes_train %>%
   summarise(mean(mental_score)) %>%
   pull()
 
-# calculate median case fatality rate (3)
+# calculate median mental health score (3)
 median_mh_score = nhanes_train %>%
   summarise(median(mental_score)) %>%
   pull()
@@ -29,6 +32,8 @@ mh_histogram = nhanes_train %>%
        y = "Frequency") +
   theme_bw()
 
+#create histogram of ratio_income
+
 ratio_income_histogram = nhanes_train %>%
   ggplot(aes(x = ratio_income)) + 
   geom_histogram(binwidth = 1) +
@@ -40,7 +45,7 @@ ratio_income_histogram = nhanes_train %>%
   theme_bw()
 
 
-# save the histogram
+# save the histogram of mental health score
 ggsave(filename = "results/mental-health-score-histogram.png", 
        plot = mh_histogram, 
        device = "png", 
@@ -190,18 +195,31 @@ p5 = nhanes_train %>%
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
   labs(x = "Hours of sleep during weekend", 
        y = "Mental health screening score",
-       title = "Hours of sleep during weekend and mental health risk") +
+title = bquote (~bold("Hours of sleep during weekend and mental health risk"))) +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 
-# save p5
-ggsave(filename = "results/age-and-mental-health.png", 
-       plot = p5, 
+plot5 = nhanes_train %>%  #just with binscatter for easier visualization 
+  ggplot(aes(x = sleep_weekend, y = mental_score)) +
+  
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  stat_summary_bin(fun='mean', bins=20,
+                   color='orange', size=2, geom='point')+
+  
+  labs(x = "Hours of weekend sleep", 
+       y = "Mental health screening score",
+       title = bquote (~bold("Hours of weekend sleep and mental health risk")))+
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# save plot 5
+ggsave(filename = "results/weekend-sleep-and-mental-health.png", 
+       plot = plot5, 
        device = "png", 
        width = 5, 
        height = 3)
 
-# examine relationship between sleep during weekend and mental health risk
+# examine relationship between hours worked and mental health risk
 p6 = nhanes_train %>%
   ggplot(aes(x = hours_worked, y = mental_score)) +
   geom_point() + 
@@ -212,46 +230,30 @@ p6 = nhanes_train %>%
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 
-# save p6
-ggsave(filename = "results/age-and-mental-health.png", 
-       plot = p5, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-# examine relationship between sleep during weekend and mental health risk
+# examine relationship between minutes of sedentary activity and mental health risk
 p7 = nhanes_train %>%
   ggplot(aes(x = min_sedentary, y = mental_score)) +
   geom_point() + 
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
   labs(x = "Minutes of sedentary activity", 
        y = "Mental health screening score",
-       title = "Hours of sleep during weekend and mental health risk") +
+       title = "Minutes of sedentary activity and mental health risk") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 
-# save p7
-ggsave(filename = "results/age-and-mental-health.png", 
-       plot = p5, 
-       device = "png", 
-       width = 5, 
-       height = 3)
-
 
 # examine relationship between gender and mental health risk
+
 p8 = nhanes_train %>%
   ggplot(aes(x = female, y = mental_score, fill = female)) + 
   geom_boxplot() +
+  scale_x_discrete(labels = c('Female', 'Male')) +
   labs(x = "Gender", 
-       y = "Mental health screening score") + 
+       y = "Mental health screening score", 
+       title = bquote (~bold("Gender and mental health risk"))) + 
   theme_bw() + theme(legend.position = "none")
 
-p8_hist = nhanes_train %>%
-  ggplot(aes(x = female, y = mental_score)) + 
-  geom_histogram() +
-  labs(x = "Gender", 
-       y = "Mental health screening score") + 
-  theme_bw() + theme(legend.position = "none")
 
 # save p8
 ggsave(filename = "results/gender-and-mental-health.png", 
@@ -260,52 +262,37 @@ ggsave(filename = "results/gender-and-mental-health.png",
        width = 5, 
        height = 3)
 
-# examine relationship between gender and mental health risk (some dif)
-p8 = nhanes_train %>%
-  ggplot(aes(x = female, y = mental_score, fill = female)) + 
-  geom_boxplot() +
-  labs(x = "Gender", 
-       y = "Mental health screening score") + 
-  theme_bw() + theme(legend.position = "none")
-
-# save p8
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
-
-# examine relationship between race/ethnicity and mental health risk (some dif)
+# examine relationship between race/ethnicity and mental health risk 
 p9 = nhanes_train %>%
-  ggplot(aes(x = nonhisp_white, y = mental_score, fill = nonhisp_white)) + 
+  ggplot(aes(x = race, y = mental_score, fill = race)) + 
   geom_boxplot() +
+  scale_x_discrete(labels = c('Non-Hispanic\nWhite', 
+                              'Mexican\nAmerican',
+                              'Other\nHispanic',
+                              'Non-Hispanic\nBlack',
+                              'Other\nRace',
+                              'Non-Hispanic\nAsian')) +
   labs(x = "Race/ethnicity", 
-       y = "Mental health screening score") + 
+       y = "Mental health screening score",
+       title = bquote (~bold("Race and mental health"))) + 
   theme_bw() + theme(legend.position = "none")
 
-# save p9
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
+ggsave(filename = "results/race-and-mental-health.png", 
+       plot = p9, 
        device = "png", 
        width = 5, 
        height = 3)
 
-#examine relationship between marriage status and mental health risk (some dif)
+#examine relationship between marriage status and mental health risk 
 p10= nhanes_train %>%
-  ggplot(aes(x = never_married, y = mental_score, fill = never_married)) + 
+  ggplot(aes(x = marriage_status, y = mental_score, fill = marriage_status)) + 
   geom_boxplot() +
   labs(x = "Marriage status", 
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p10
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between being born in ths US and mental health risk
+#examine relationship between being born in the US and mental health risk
 p11= nhanes_train %>%
   ggplot(aes(x = born_us, y = mental_score, fill = born_us)) + 
   geom_boxplot() +
@@ -313,29 +300,29 @@ p11= nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p11
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between being education and mental health risk (some dif)
+#examine relationship between being education and mental health risk 
 p12= nhanes_train %>%
-  ggplot(aes(x = edu_college, y = mental_score, fill = edu_college)) + 
+  ggplot(aes(x = edu, y = mental_score, fill = edu)) + 
   geom_boxplot() +
-  labs(x = "Some college or higher", 
-       y = "Mental health screening score") + 
+  scale_x_discrete(labels = c('College\ngraduate\nor above', 
+                              'High school\n/GED',
+                              'Some college\n/AA degree',
+                              '9th-11th\ngrade',
+                              'Less than\n9th grade')) +
+  labs(x = "Education status", 
+       y = "Mental health screening score", 
+       tittle = bquote (~bold("Education and mental health risk"))) + 
   theme_bw() + theme(legend.position = "none")
 
 # save p12
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
+ggsave(filename = "results/education-and-mental-health.png", 
+       plot = p12, 
        device = "png", 
        width = 5, 
        height = 3)
 
-#examine relationship between smoking and mental health risk (some dif - those who smoke every day)
+#examine relationship between smoking and mental health risk 
 p13= nhanes_train %>%
   ggplot(aes(x = now_smoke, y = mental_score, fill = now_smoke)) + 
   geom_boxplot() +
@@ -343,24 +330,20 @@ p13= nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p13
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between sleep disorder and mental health risk (some dif - those who told doctor)
+#examine relationship between sleep disorder and mental health risk 
 p14= nhanes_train %>%
   ggplot(aes(x = dr_sleep, y = mental_score, fill = dr_sleep)) + 
   geom_boxplot() +
-  labs(x = "Told doctor about trouble sleeping", 
-       y = "Mental health screening score") + 
+  scale_x_discrete(labels = c('No', 'Yes')) +
+  labs(x = "Ever told a doctor about trouble sleeping", 
+       y = "Mental health screening score",
+       title = bquote (~bold("Sleep trouble and mental health"))) + 
   theme_bw() + theme(legend.position = "none")
 
 # save p14
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
+ggsave(filename = "results/drsleep-and-mental-health.png", 
+       plot = p14, 
        device = "png", 
        width = 5, 
        height = 3)
@@ -373,14 +356,8 @@ p15= nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p15
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between asthma and mental health risk 
+#examine relationship between arthritis and mental health risk 
 p16= nhanes_train %>%
   ggplot(aes(x = told_arthritis, y = mental_score, fill = told_arthritis)) + 
   geom_boxplot() +
@@ -388,14 +365,8 @@ p16= nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p16
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between coronary heart disease and mental health risk (no dif)
+#examine relationship between coronary heart disease and mental health risk 
 p17= nhanes_train %>%
   ggplot(aes(x = told_coronary, y = mental_score, fill = told_coronary)) + 
   geom_boxplot() +
@@ -403,7 +374,7 @@ p17= nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-#examine relationship between heart attack and mental health risk (no dif)
+#examine relationship between heart attack and mental health risk 
 p18 = nhanes_train %>%
   ggplot(aes(x = told_attack, y = mental_score, fill = told_attack)) + 
   geom_boxplot() +
@@ -411,29 +382,16 @@ p18 = nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-#examine relationship between coronary heart disease and mental health risk (no dif)
-p17= nhanes_train %>%
-  ggplot(aes(x = told_coronary, y = mental_score, fill = told_coronary)) + 
-  geom_boxplot() +
-  labs(x = "Told by a doctor to have coronary heart disease", 
-       y = "Mental health screening score") + 
-  theme_bw() + theme(legend.position = "none")
-
-#examine relationship between stroke and mental health risk (quite a big dif)
+#examine relationship between stroke and mental health risk 
 p19 = nhanes_train %>%
   ggplot(aes(x = told_stroke, y = mental_score, fill = told_stroke)) + 
   geom_boxplot() +
   labs(x = "Told by a doctor to have stroke", 
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
-# save p17
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between thyroid and mental health risk (some dif)
+
+#examine relationship between thyroid and mental health risk 
 p20 = nhanes_train %>%
   ggplot(aes(x = told_thyroid, y = mental_score, fill = told_thyroid)) + 
   geom_boxplot() +
@@ -441,15 +399,8 @@ p20 = nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p20
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-
-#examine relationship between stroke and mental health risk (a little dif)
+#examine relationship between cancer and mental health risk 
 p21 = nhanes_train %>%
   ggplot(aes(x = told_cancer, y = mental_score, fill = told_cancer)) + 
   geom_boxplot() +
@@ -457,30 +408,16 @@ p21 = nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p21
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between being told by doctor to lose weight and mental health risk (a little dif)
-p22 = nhanes_train %>%
+#examine relationship between being told by doctor to lose weight and mental health risk 
   ggplot(aes(x = told_weight, y = mental_score, fill = told_weight)) + 
   geom_boxplot() +
   labs(x = "Told by a doctor to lose weight", 
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p22
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-
-#examine relationship between being told by doctor to exercise and mental health risk (a little dif)
+#examine relationship between being told by doctor to exercise and mental health risk 
 p23 = nhanes_train %>%
   ggplot(aes(x = told_exe, y = mental_score, fill = told_exe)) + 
   geom_boxplot() +
@@ -488,44 +425,25 @@ p23 = nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p23
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
 
-#examine relationship between being told by doctor to reduce salt and mental health risk (a little dif)
+#examine relationship between being told by doctor to reduce salt and mental health risk 
 p24 = nhanes_train %>%
   ggplot(aes(x = told_salt, y = mental_score, fill = told_salt)) + 
   geom_boxplot() +
-  labs(x = "Told by a doctor to exercise", 
+  labs(x = "Told by a doctor to reduce salt", 
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p24
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
 
-#examine relationship between being told by doctor to reduce salt and mental health risk (a little dif)
+#examine relationship between being told by doctor to reduce fat and mental health risk 
 p25 = nhanes_train %>%
   ggplot(aes(x = told_fat, y = mental_score, fill = told_fat)) + 
   geom_boxplot() +
   labs(x = "Told by a doctor to lose fat", 
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
-
-# save p25
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
 
 #examine relationship between now try to control weight and mental health risk 
@@ -536,14 +454,8 @@ p26 = nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p26
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between now try to increase exercise and mental health risk (no dif)
+#examine relationship between now try to increase exercise and mental health risk 
 p27 = nhanes_train %>%
   ggplot(aes(x = now_increase_ex, y = mental_score, fill = now_increase_ex)) + 
   geom_boxplot() +
@@ -551,12 +463,6 @@ p27 = nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p27
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
 #examine relationship between now try to reduce salt and mental health risk 
 p28 = nhanes_train %>%
@@ -566,14 +472,8 @@ p28 = nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p28
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between now try to reduce fat and mental health risk (some dif)
+#examine relationship between now try to reduce fat and mental health risk 
 p29 = nhanes_train %>%
   ggplot(aes(x = now_reduce_fat, y = mental_score, fill = now_reduce_fat)) + 
   geom_boxplot() +
@@ -581,23 +481,29 @@ p29 = nhanes_train %>%
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
 
-# save p29
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
-       device = "png", 
-       width = 5, 
-       height = 3)
 
-#examine relationship between weight self-perception and mental health risk (some dif)
+#examine relationship between weight self-perception and mental health risk 
 p30 = nhanes_train %>%
   ggplot(aes(x = weight_self_percept, y = mental_score, 
              fill = weight_self_percept)) + 
   geom_boxplot() +
-  labs(x = "Weight perception", 
-       y = "Mental health screening score") + 
+  scale_x_discrete(labels = c('Overweight', 
+                              'About the right weight',
+                              'Underweight')) +
+  labs(x = "How do you consider your weight?", 
+       y = "Mental health screening score",
+       title = bquote (~bold("Weight self-perception and mental health"))) + 
   theme_bw() + theme(legend.position = "none")
 
-#examine relationship between weight self-perception and mental health risk (some dif)
+#save p30
+
+ggsave(filename = "results/weight-percept-and-mental-health.png", 
+       plot = p30, 
+       device = "png", 
+       width = 5, 
+       height = 3)
+
+#examine relationship between wanting to lose weight and mental health risk
 p31 = nhanes_train %>%
   ggplot(aes(x = want_lose_weight, y = mental_score, 
              fill = want_lose_weight)) + 
@@ -605,33 +511,167 @@ p31 = nhanes_train %>%
   labs(x = "Like to weigh more, less or the same", 
        y = "Mental health screening score") + 
   theme_bw() + theme(legend.position = "none")
-# save p29
-ggsave(filename = "results/gender-and-mental-health.png", 
-       plot = p8, 
+
+#examine relationship between feeling overly sleepy during the day and mental health risk
+
+p32 = nhanes_train %>%
+  ggplot(aes(x = sleepy, y = mental_score, 
+             fill = sleepy)) + 
+  geom_boxplot() +
+  scale_x_discrete(labels = c('Sometimes', 
+                              'Rarely',
+                              'Often',
+                              'Almost always',
+                              'Never')) +
+  labs(x = "In the past month how often feeling overly sleepy during the day?", 
+       y = "Mental health screening score",
+       title = bquote (~bold("Excessive sleepiness and mental health"))) + 
+  theme_bw() + theme(legend.position = "none")
+
+#save p32
+
+ggsave(filename = "results/sleepy-and-mental-health.png", 
+       plot = p32, 
        device = "png", 
        width = 5, 
        height = 3)
-# create a heatmap of case fatality rate across the U.S.
-p = map_data("county") %>%
-  as_tibble() %>% 
-  left_join(case_data %>% 
-              rename(region = state, 
-                     subregion = county,
-                     `Case Fatality Rate` = case_fatality_rate) %>% 
-              mutate(region = str_to_lower(region), 
-                     subregion = str_to_lower(subregion)), 
-            by = c("region", "subregion")) %>%
-  ggplot() + 
-  geom_polygon(data=map_data("state"), 
-               aes(x=long, y=lat, group=group),
-               color="black", fill=NA,  size = 1, alpha = .3) + 
-  geom_polygon(aes(x=long, y=lat, group=group, fill = `Case Fatality Rate`),
-               color="darkblue", size = .1) +
-  scale_fill_gradient(low = "blue", high = "red") +
-  theme_void()
 
-ggsave(filename = "results/response-map.png", 
-       plot = p, 
+##examine the relationship between vigorous-intensity recreational activity and mental health risks
+p33 = nhanes_train %>%
+  ggplot(aes(x = vigor_rec, y = mental_score, 
+             fill = vigor_rec)) + 
+  geom_boxplot() +
+  scale_x_discrete(labels = c('Yes', 'No'))+
+                             
+  labs(x = "In a typical week do you do vigorous-intensity recreational activity?", 
+       y = "Mental health screening score",
+  title = bquote (~bold
+          ("Recreational activity and mental health "))) + 
+  theme_bw() + theme(legend.position = "none")
+
+#save p33
+
+ggsave(filename = "results/vigor-rec-and-mental-health.png", 
+       plot = p33, 
        device = "png", 
-       width = 7, 
-       height = 4)
+       width = 5, 
+       height = 3)
+
+
+##examine the relationship between ratio income and ever telling a doctor about trouble with sleeping
+p34 = nhanes_train %>%
+  ggplot(aes(x = dr_sleep, y = ratio_income, 
+             fill = dr_sleep)) + 
+  geom_boxplot() +
+  scale_x_discrete(labels = c('No', 'Yes'))+
+  
+  labs(x = "Ever told a doctor about trouble sleeping", 
+       y = "Ratio of family income to poverty",
+       title = bquote (~bold("Sleep trouble and income"))) + 
+  theme_bw() + theme(legend.position = "none")
+
+#save p34
+
+ggsave(filename = "results/income-dr-sleep.png", 
+       plot = p34, 
+       device = "png", 
+       width = 5, 
+       height = 3)
+
+#examine relationship between ratio income and frequency of feeling overly sleepy during the day
+
+p35 = nhanes_train %>%
+  ggplot(aes(x = sleepy, y = ratio_income, 
+             fill = sleepy)) + 
+  geom_boxplot() +
+  #scale_x_discrete(labels = c('Yes', 'No'))+
+  
+  labs(x = "Frequency of feeling overly sleepy during the day", 
+       y = "Ratio of family income to poverty") + 
+  theme_bw() + theme(legend.position = "none")
+
+#relationship between ratio family income and engage in vigorous recreational activity
+p36 = nhanes_train %>%
+  ggplot(aes(x = vigor_rec, y = ratio_income, 
+             fill = vigor_rec)) + 
+  geom_boxplot() +
+  scale_x_discrete(labels = c('Yes', 'No'))+
+  
+  labs(x = "Whether or not engage in vigorous-intensity recreational activity", 
+       y = "Ratio of family income to poverty",
+title = bquote (~bold("Recreational activity and income"))) + 
+  theme_bw() + theme(legend.position = "none")
+
+
+#save p36
+
+ggsave(filename = "results/income-vigor-rec.png", 
+       plot = p36, 
+       device = "png", 
+       width = 5, 
+       height = 3)
+
+#gender and hours of sleep weekday
+p37 = nhanes_train %>%
+  ggplot(aes(x = female, y = sleep_weekday, 
+             fill = female)) + 
+  geom_boxplot() +
+  scale_x_discrete(labels = c('Female', 'Male'))+
+  
+  labs(x = "Gender", 
+       y = "Weekday hours of sleep") + 
+  theme_bw() + theme(legend.position = "none")
+
+#gender and weekend hours of sleep
+p38 = nhanes_train %>%
+  ggplot(aes(x = female, y = sleep_weekend, 
+             fill = female)) + 
+  geom_boxplot() +
+  scale_x_discrete(labels = c('Female', 'Male'))+
+  
+  labs(x = "Gender", 
+       y = "Weekend hours of sleep") + 
+  theme_bw() + theme(legend.position = "none")
+
+#race and weekday sleep
+p40 = nhanes_train %>%
+  ggplot(aes(x = race, y = sleep_weekday, 
+             fill = race)) + 
+  geom_boxplot() +
+  scale_x_discrete(labels = c('Non-Hispanic\nWhite', 
+                              'Mexican\nAmerican',
+                              'Other\nHispanic',
+                              'Non-Hispanic\nBlack',
+                              'Other\nRace',
+                              'Non-Hispanic\nAsian'))+
+  
+  labs(x = "Race", 
+       y = "Weekday hours of sleep",
+       title = bquote (~bold("Race and weekday hours of sleep"))) + 
+  theme_bw() + theme(legend.position = "none")
+
+ggsave(filename = "results/race-weekday-sleep.png", 
+       plot = p40, 
+       device = "png", 
+       width = 5, 
+       height = 3)
+
+#race and weekend hours of sleep
+p41 = nhanes_train %>%
+  ggplot(aes(x = race, y = sleep_weekend, 
+             fill = race)) + 
+  geom_boxplot() +
+  scale_x_discrete(labels = c('Non-Hispanic\nWhite', 
+                              'Mexican\nAmerican',
+                              'Other\nHispanic',
+                              'Non-Hispanic\nBlack',
+                              'Other\nRace',
+                              'Non-Hispanic\nAsian'))+
+  
+  labs(x = "Race", 
+       y = "Weekend hours of sleep") + 
+  theme_bw() + theme(legend.position = "none")
+
+
+
+
